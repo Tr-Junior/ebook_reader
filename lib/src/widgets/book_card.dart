@@ -1,4 +1,5 @@
 import 'package:ebook_reader/src/models/book.dart';
+import 'package:ebook_reader/src/screens/book_details_scren.dart';
 import 'package:flutter/material.dart';
 
 class BookCard extends StatelessWidget {
