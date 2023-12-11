@@ -1,3 +1,6 @@
+import 'package:ebook_reader/src/models/book.dart';
+import 'package:ebook_reader/src/services/book_service.dart';
+import 'package:ebook_reader/src/widgets/book_card.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
