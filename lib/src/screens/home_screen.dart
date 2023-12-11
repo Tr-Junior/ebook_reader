@@ -1,42 +1,59 @@
+// home_screen.dart
 import 'package:ebook_reader/src/models/book.dart';
-import 'package:ebook_reader/src/services/book_service.dart';
 import 'package:ebook_reader/src/widgets/book_card.dart';
 import 'package:flutter/material.dart';
+import 'package:ebook_reader/src/services/book_service.dart';
 
-class HomeScreen extends StatelessWidget {
-  final BookService _bookService = BookService();
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-  HomeScreen({super.key});
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late List<Book> books = [];
+
+  @override
+  void initState() {
+    super.initState();
+    books = [];
+    loadBooks();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Estante de Livros'),
+        title: const Text('Lista de Livros'),
       ),
-      body: FutureBuilder<List<Book>>(
-        future: _bookService.getBooks(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            return const Text('Erro ao carregar os livros.');
-          } else {
-            List<Book> books = snapshot.data!;
-            return GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-              ),
-              itemCount: books.length,
-              itemBuilder: (context, index) {
-                return BookCard(book: books[index]);
-              },
-            );
-          }
-        },
-      ),
+      body: books != null
+          ? books.isNotEmpty
+              ? ListView.builder(
+                  itemCount: books.length,
+                  itemBuilder: (context, index) {
+                    final book = books[index];
+                    return BookCard(book: book);
+                  },
+                )
+              : const Center(
+                  child: Text('Nenhum livro disponível.'),
+                )
+          : const Center(
+              child: CircularProgressIndicator(),
+            ),
     );
+  }
+
+  Future<void> loadBooks() async {
+    try {
+      final List<Book> fetchedBooks = await BookService().getBooks();
+      setState(() {
+        books = fetchedBooks;
+      });
+    } catch (error) {
+      // Tratar erro ao carregar livros
+      print('Erro ao carregar livros: $error');
+    }
   }
 }
