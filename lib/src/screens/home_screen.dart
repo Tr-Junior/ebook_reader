@@ -1,11 +1,12 @@
-// home_screen.dart
+import 'package:ebook_reader/src/screens/favorite_book_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:ebook_reader/src/models/book.dart';
 import 'package:ebook_reader/src/widgets/book_card.dart';
-import 'package:flutter/material.dart';
 import 'package:ebook_reader/src/services/book_service.dart';
+import 'package:vocsy_epub_viewer/epub_viewer.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -13,11 +14,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late List<Book> books = [];
+  List<int> favoriteBookIds = [];
 
   @override
   void initState() {
     super.initState();
-    books = [];
     loadBooks();
   }
 
@@ -26,23 +27,49 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lista de Livros'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FavoriteBooksScreen(
+                    books: books
+                        .where((book) => favoriteBookIds.contains(book.id))
+                        .toList(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
-      body: books != null
-          ? books.isNotEmpty
-              ? ListView.builder(
-                  itemCount: books.length,
-                  itemBuilder: (context, index) {
-                    final book = books[index];
-                    return BookCard(book: book);
-                  },
-                )
-              : const Center(
-                  child: Text('Nenhum livro disponível.'),
-                )
-          : const Center(
-              child: CircularProgressIndicator(),
-            ),
+      body: _buildBookList(),
     );
+  }
+
+  Widget _buildBookList() {
+    return books.isNotEmpty
+        ? ListView.builder(
+            itemCount: books.length,
+            itemBuilder: (context, index) {
+              final book = books[index];
+              return BookCard(
+                book: book,
+                isFavorite: favoriteBookIds.contains(book.id),
+                onFavoritePressed: () {
+                  toggleFavorite(book);
+                },
+                onReadPressed: () {
+                  downloadAndOpenBook(book);
+                },
+              );
+            },
+          )
+        : const Center(
+            child: Text('Nenhum livro disponível.'),
+          );
   }
 
   Future<void> loadBooks() async {
@@ -52,8 +79,37 @@ class _HomeScreenState extends State<HomeScreen> {
         books = fetchedBooks;
       });
     } catch (error) {
-      // Tratar erro ao carregar livros
       print('Erro ao carregar livros: $error');
     }
+  }
+
+  Future<void> downloadAndOpenBook(Book book) async {
+    try {
+      final String downloadedBookPath =
+          await BookService().downloadOrOpenBook(book);
+
+      VocsyEpub.setConfig(
+        themeColor: Theme.of(context).primaryColor,
+        identifier: "ABook",
+        scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
+        allowSharing: true,
+        enableTts: true,
+        nightMode: true,
+      );
+
+      VocsyEpub.open(downloadedBookPath);
+    } catch (error) {
+      print('Erro ao abrir o livro: $error');
+    }
+  }
+
+  void toggleFavorite(Book book) {
+    setState(() {
+      if (favoriteBookIds.contains(book.id)) {
+        favoriteBookIds.remove(book.id);
+      } else {
+        favoriteBookIds.add(book.id);
+      }
+    });
   }
 }
