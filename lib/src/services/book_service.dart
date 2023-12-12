@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:ebook_reader/src/models/book.dart';
@@ -27,9 +28,7 @@ class BookService {
 
   Future<String> downloadBook(Book book) async {
     try {
-      final response = await _dio.get(book.downloadUrl,
-          options: Options(responseType: ResponseType.bytes));
-      final List<int> bytes = response.data;
+      final List<int> bytes = await _downloadBookBytes(book.downloadUrl);
       final String filePath = await saveBookToLocal(book, bytes);
       return filePath;
     } catch (error) {
@@ -37,13 +36,16 @@ class BookService {
     }
   }
 
-  Future<String> saveBookToLocal(Book book, List<int> bytes) async {
-    final Directory appDocDir = await getApplicationDocumentsDirectory();
-    final String filePath = "${appDocDir.path}/${book.title}.epub";
+  Future<List<int>> _downloadBookBytes(String url) async {
+    final response =
+        await _dio.get(url, options: Options(responseType: ResponseType.bytes));
+    return response.data;
+  }
 
+  Future<String> saveBookToLocal(Book book, List<int> bytes) async {
+    final String filePath = await getLocalBookPath(book);
     final File file = File(filePath);
     await file.writeAsBytes(bytes);
-
     return filePath;
   }
 
@@ -59,9 +61,7 @@ class BookService {
       return getLocalBookPath(book);
     } else {
       try {
-        final response = await _dio.get(book.downloadUrl,
-            options: Options(responseType: ResponseType.bytes));
-        final List<int> bytes = response.data;
+        final List<int> bytes = await _downloadBookBytes(book.downloadUrl);
         final String filePath = await saveBookToLocal(book, bytes);
         return filePath;
       } catch (error) {
