@@ -1,33 +1,36 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:ebook_reader/src/models/book.dart';
 import 'package:path_provider/path_provider.dart';
 
 class BookService {
-  Future<List<Book>> getBooks() async {
-    final response =
-        await http.get(Uri.parse('https://escribo.com/books.json'));
+  final Dio _dio = Dio();
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
+  BookService() {
+    _dio.interceptors.add(
+        DioCacheInterceptor(options: CacheOptions(store: MemCacheStore())));
+  }
+
+  Future<List<Book>> getBooks() async {
+    try {
+      final response = await _dio.get('https://escribo.com/books.json');
+      final List<dynamic> data = response.data;
       return data.map((json) => Book.fromJson(json)).toList();
-    } else {
-      throw Exception('Erro ao carregar os livros');
+    } catch (error) {
+      throw Exception('Erro ao carregar os livros: $error');
     }
   }
 
   Future<String> downloadBook(Book book) async {
-    final response = await http.get(Uri.parse(book.downloadUrl));
-
-    if (response.statusCode == 200) {
-      final List<int> bytes = response.bodyBytes;
-
+    try {
+      final response = await _dio.get(book.downloadUrl,
+          options: Options(responseType: ResponseType.bytes));
+      final List<int> bytes = response.data;
       final String filePath = await saveBookToLocal(book, bytes);
-
       return filePath;
-    } else {
-      throw Exception('Erro ao baixar o livro');
+    } catch (error) {
+      throw Exception('Erro ao baixar o livro: $error');
     }
   }
 
@@ -52,16 +55,14 @@ class BookService {
     if (isDownloaded) {
       return getLocalBookPath(book);
     } else {
-      final response = await http.get(Uri.parse(book.downloadUrl));
-
-      if (response.statusCode == 200) {
-        final List<int> bytes = response.bodyBytes;
-
+      try {
+        final response = await _dio.get(book.downloadUrl,
+            options: Options(responseType: ResponseType.bytes));
+        final List<int> bytes = response.data;
         final String filePath = await saveBookToLocal(book, bytes);
-
         return filePath;
-      } else {
-        throw Exception('Erro ao baixar o livro');
+      } catch (error) {
+        throw Exception('Erro ao baixar o livro: $error');
       }
     }
   }
