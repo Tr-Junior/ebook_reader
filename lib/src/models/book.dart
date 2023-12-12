@@ -1,4 +1,3 @@
-// book.dart
 class Book {
   final int id;
   final String title;
