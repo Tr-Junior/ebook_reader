@@ -6,8 +6,11 @@ import 'package:path_provider/path_provider.dart';
 
 class BookService {
   final Dio _dio = Dio();
+  static final BookService _instance = BookService._internal();
 
-  BookService() {
+  factory BookService() => _instance;
+
+  BookService._internal() {
     _dio.interceptors.add(
         DioCacheInterceptor(options: CacheOptions(store: MemCacheStore())));
   }
