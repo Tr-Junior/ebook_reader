@@ -14,46 +14,58 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late List<Book> books = [];
   List<int> favoriteBookIds = [];
   late SharedPreferences prefs;
-  late int crossAxisCount;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    initSharedPreferences();
+    _tabController = TabController(length: 2, vsync: this);
     loadBooks();
-    loadFavorites();
   }
 
   @override
   Widget build(BuildContext context) {
-    crossAxisCount = _calculateCrossAxisCount(context);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lista de Livros'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bookmark),
-            onPressed: () => _navigateToFavoriteBooks(),
+        title: const Text('Estante de Livros'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Lista de Livros'),
+            Tab(text: 'Favoritos'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildBookList(),
+          FavoriteBooksScreen(
+            key: Key('FavoriteBooksScreen'),
+            books: books
+                .where((book) => favoriteBookIds.contains(book.id))
+                .toList(),
+            onFavoriteToggled: _toggleFavorite,
           ),
         ],
       ),
-      body: _buildBookList(),
     );
   }
 
   Widget _buildBookList() {
     return books.isNotEmpty
         ? GridView.builder(
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 180,
-                crossAxisSpacing: 6.0,
-                mainAxisSpacing: 6.0,
-                childAspectRatio: 0.6),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 240,
+              crossAxisSpacing: 6.0,
+              mainAxisSpacing: 6.0,
+              childAspectRatio: 0.7,
+            ),
             itemCount: books.length,
             itemBuilder: (context, index) {
               final book = books[index];
@@ -61,18 +73,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 book: book,
                 isFavorite: favoriteBookIds.contains(book.id),
                 onFavoritePressed: () => _toggleFavorite(book),
-                onReadPressed: (Book selectedBook) =>
-                    _downloadAndOpenBook(selectedBook),
+                onReadPressed: _downloadAndOpenBook,
               );
             },
           )
         : const Center(
             child: Text('Nenhum livro disponível.'),
           );
-  }
-
-  int _calculateCrossAxisCount(BuildContext context) {
-    return MediaQuery.of(context).orientation == Orientation.portrait ? 2 : 3;
   }
 
   Future<void> loadBooks() async {
@@ -106,40 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> initSharedPreferences() async {
-    prefs = await SharedPreferences.getInstance();
-  }
-
-  Future<void> loadFavorites() async {
-    final String favoritesString = prefs.getString('favoriteBookIds') ?? '[]';
-    setState(() {
-      favoriteBookIds = List<int>.from(json.decode(favoritesString));
-    });
-  }
-
-  Future<void> _updateFavorites() async {
-    await prefs.setString('favoriteBookIds', json.encode(favoriteBookIds));
-  }
-
   void _toggleFavorite(Book book) {
     setState(() {
       favoriteBookIds.contains(book.id)
           ? favoriteBookIds.remove(book.id)
           : favoriteBookIds.add(book.id);
-      _updateFavorites();
     });
-  }
-
-  void _navigateToFavoriteBooks() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FavoriteBooksScreen(
-          books:
-              books.where((book) => favoriteBookIds.contains(book.id)).toList(),
-          onFavoriteToggled: _toggleFavorite,
-        ),
-      ),
-    );
   }
 }
