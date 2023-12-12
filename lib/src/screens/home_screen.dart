@@ -1,11 +1,12 @@
-import 'package:ebook_reader/src/screens/favorite_book_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:ebook_reader/src/models/book.dart';
-import 'package:ebook_reader/src/widgets/book_card.dart';
+import 'package:ebook_reader/src/screens/favorite_book_screen.dart';
 import 'package:ebook_reader/src/services/book_service.dart';
+import 'package:ebook_reader/src/widgets/book_card.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vocsy_epub_viewer/epub_viewer.dart';
 import 'dart:convert';
+
+import 'package:vocsy_epub_viewer/epub_viewer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -109,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen>
 
       VocsyEpub.open(downloadedBookPath);
     } catch (error) {
-      print('Erro ao abrir o livro: $error');
+      print('Erro ao abrir o livro  asdasd: $error');
     }
   }
 

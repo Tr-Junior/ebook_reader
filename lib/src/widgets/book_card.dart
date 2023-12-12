@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:ebook_reader/src/models/book.dart';
+import 'package:flutter/material.dart';
 
 class BookCard extends StatefulWidget {
   final Book book;
