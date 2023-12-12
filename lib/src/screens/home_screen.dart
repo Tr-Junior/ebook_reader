@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late List<Book> books = [];
   List<int> favoriteBookIds = [];
   late SharedPreferences prefs;
+  late int crossAxisCount;
 
   @override
   void initState() {
@@ -29,25 +30,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    crossAxisCount = _calculateCrossAxisCount(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lista de Livros'),
         actions: [
           IconButton(
-            icon: Icon(Icons.favorite),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FavoriteBooksScreen(
-                    books: books
-                        .where((book) => favoriteBookIds.contains(book.id))
-                        .toList(),
-                    onFavoriteToggled: toggleFavorite, // Adicione esta linha
-                  ),
-                ),
-              );
-            },
+            icon: const Icon(Icons.bookmark),
+            onPressed: () => _navigateToFavoriteBooks(),
           ),
         ],
       ),
@@ -57,25 +48,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBookList() {
     return books.isNotEmpty
-        ? ListView.builder(
+        ? GridView.builder(
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 180,
+                crossAxisSpacing: 6.0,
+                mainAxisSpacing: 6.0,
+                childAspectRatio: 0.6),
             itemCount: books.length,
             itemBuilder: (context, index) {
               final book = books[index];
               return BookCard(
                 book: book,
                 isFavorite: favoriteBookIds.contains(book.id),
-                onFavoritePressed: () {
-                  toggleFavorite(book);
-                },
-                onReadPressed: (Book selectedBook) {
-                  downloadAndOpenBook(selectedBook);
-                },
+                onFavoritePressed: () => _toggleFavorite(book),
+                onReadPressed: (Book selectedBook) =>
+                    _downloadAndOpenBook(selectedBook),
               );
             },
           )
         : const Center(
             child: Text('Nenhum livro disponível.'),
           );
+  }
+
+  int _calculateCrossAxisCount(BuildContext context) {
+    return MediaQuery.of(context).orientation == Orientation.portrait ? 2 : 3;
   }
 
   Future<void> loadBooks() async {
@@ -89,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> downloadAndOpenBook(Book book) async {
+  Future<void> _downloadAndOpenBook(Book book) async {
     try {
       final String downloadedBookPath =
           await BookService().downloadOrOpenBook(book);
@@ -120,18 +117,29 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> updateFavorites() async {
+  Future<void> _updateFavorites() async {
     await prefs.setString('favoriteBookIds', json.encode(favoriteBookIds));
   }
 
-  void toggleFavorite(Book book) {
+  void _toggleFavorite(Book book) {
     setState(() {
-      if (favoriteBookIds.contains(book.id)) {
-        favoriteBookIds.remove(book.id);
-      } else {
-        favoriteBookIds.add(book.id);
-      }
-      updateFavorites();
+      favoriteBookIds.contains(book.id)
+          ? favoriteBookIds.remove(book.id)
+          : favoriteBookIds.add(book.id);
+      _updateFavorites();
     });
+  }
+
+  void _navigateToFavoriteBooks() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FavoriteBooksScreen(
+          books:
+              books.where((book) => favoriteBookIds.contains(book.id)).toList(),
+          onFavoriteToggled: _toggleFavorite,
+        ),
+      ),
+    );
   }
 }
