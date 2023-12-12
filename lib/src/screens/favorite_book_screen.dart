@@ -1,9 +1,10 @@
-import 'package:ebook_reader/src/services/book_service.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:ebook_reader/src/models/book.dart';
 import 'package:ebook_reader/src/widgets/book_card.dart';
 import 'package:vocsy_epub_viewer/epub_viewer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ebook_reader/src/services/book_service.dart';
 
 class FavoriteBooksScreen extends StatefulWidget {
   final List<Book> books;
@@ -21,6 +22,7 @@ class FavoriteBooksScreen extends StatefulWidget {
 
 class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
   late SharedPreferences prefs;
+  late List<int> favoriteBookIds;
 
   @override
   void initState() {
@@ -35,34 +37,36 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Livros Favoritos'),
-      ),
       body: _buildBookList(),
     );
   }
 
   Widget _buildBookList() {
-    return widget.books.isNotEmpty
+    final List<Book> favoriteBooksCopy = List.from(widget.books);
+
+    return favoriteBooksCopy.isNotEmpty
         ? GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 180,
+              maxCrossAxisExtent: 240,
               crossAxisSpacing: 6.0,
               mainAxisSpacing: 6.0,
-              childAspectRatio: 0.6,
+              childAspectRatio: 0.7,
             ),
-            itemCount: widget.books.length,
+            itemCount: favoriteBooksCopy.length,
             itemBuilder: (context, index) {
-              final book = widget.books[index];
+              final book = favoriteBooksCopy[index];
               return BookCard(
                 book: book,
                 isFavorite: true,
-                onFavoritePressed: () {
+                onFavoritePressed: () async {
                   widget.onFavoriteToggled(book);
+
+                  await Future.delayed(Duration(milliseconds: 300));
+
                   setState(() {
                     widget.books.remove(book);
                   });
-                  _updateFavorites();
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content:
@@ -100,12 +104,5 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
     } catch (error) {
       print('Erro ao abrir o livro: $error');
     }
-  }
-
-  Future<void> _updateFavorites() async {
-    final List<int> favoriteBookIds =
-        widget.books.map((book) => book.id).toList();
-    await prefs.setStringList(
-        'favoriteBookIds', favoriteBookIds.map((id) => id.toString()).toList());
   }
 }
