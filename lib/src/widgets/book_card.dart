@@ -5,39 +5,45 @@ class BookCard extends StatelessWidget {
   final Book book;
   final bool isFavorite;
   final VoidCallback onFavoritePressed;
-  final VoidCallback onReadPressed;
+  final Function(Book) onReadPressed;
 
   const BookCard({
-    Key? key,
+    super.key,
     required this.book,
     required this.isFavorite,
     required this.onFavoritePressed,
     required this.onReadPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Stack(
+        alignment: Alignment.topRight,
         children: [
-          Image.network(book.coverUrl, fit: BoxFit.cover),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(book.title),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              IconButton(
-                icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-                onPressed: onFavoritePressed,
+              GestureDetector(
+                onTap: () {
+                  onReadPressed(book);
+                },
+                child: Image.network(book.coverUrl, fit: BoxFit.cover),
               ),
-              IconButton(
-                icon: Icon(Icons.read_more),
-                onPressed: onReadPressed,
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(book.title),
               ),
+              // A Row foi removida aqui.
             ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.bookmark),
+            iconSize: 40,
+            color: isFavorite
+                ? const Color.fromARGB(255, 236, 50, 36)
+                : const Color.fromARGB(255, 87, 87, 87),
+            onPressed: onFavoritePressed,
           ),
         ],
       ),
