@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:ebook_reader/src/models/book.dart';
 import 'package:ebook_reader/src/services/book_service.dart';
 import 'package:ebook_reader/src/widgets/book_card.dart';
@@ -21,7 +23,8 @@ class FavoriteBooksScreen extends StatefulWidget {
 
 class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
   late SharedPreferences prefs;
-  late List<int> favoriteBookIds;
+  List<int> favoriteBookIds = [];
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   @override
   void initState() {
@@ -29,8 +32,11 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
     _initSharedPreferences();
   }
 
-  Future<void> _initSharedPreferences() async {
-    prefs = await SharedPreferences.getInstance();
+  void _initSharedPreferences() {
+    _prefs.then((SharedPreferences prefs) {
+      String value = prefs.getString('books_id') ?? '';
+      favoriteBookIds = utf8.encode(value);
+    });
   }
 
   @override
