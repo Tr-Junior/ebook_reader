@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ebook_reader/src/models/book.dart';
 
-class BookCard extends StatelessWidget {
+class BookCard extends StatefulWidget {
   final Book book;
   final bool isFavorite;
   final VoidCallback onFavoritePressed;
@@ -16,23 +16,88 @@ class BookCard extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _BookCardState createState() => _BookCardState();
+}
+
+class _BookCardState extends State<BookCard> {
+  bool isLoading = false;
+
+  @override
   Widget build(BuildContext context) {
     bool isHorizontal =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Card(
+      elevation: 5,
+      margin: EdgeInsets.all(8),
       child: Stack(
         alignment: Alignment.topRight,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              GestureDetector(
-                onTap: () => onReadPressed(book),
-                child: Image.network(
-                  book.coverUrl,
-                  fit: BoxFit.cover,
-                  height: isHorizontal ? 190 : 200,
+              Expanded(
+                // Adicione o Expanded aqui
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                  child: GestureDetector(
+                    onTap: () async {
+                      setState(() {
+                        isLoading = true;
+                      });
+
+                      await widget.onReadPressed(widget.book);
+
+                      setState(() {
+                        isLoading = false;
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Livro clicado: ${widget.book.title}'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: isHorizontal ? 180 : 200,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(widget.book.coverUrl),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          child: isLoading
+                              ? Container(
+                                  color: Colors.black.withOpacity(0.5),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        if (!isLoading)
+                          Container(
+                            height: isHorizontal ? 180 : 200,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.7),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               Padding(
@@ -41,17 +106,21 @@ class BookCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      book.title,
+                      widget.book.title,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: isHorizontal ? 8 : 12,
+                        fontSize: isHorizontal ? 12 : 12,
+                        color: Colors.black,
                       ),
                     ),
                     Text(
-                      'by ${book.author}',
+                      'by ${widget.book.author}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: isHorizontal ? 8 : 10,
+                        fontSize: isHorizontal ? 10 : 12,
                         fontStyle: FontStyle.italic,
+                        color: Colors.black,
                       ),
                     ),
                   ],
@@ -60,15 +129,30 @@ class BookCard extends StatelessWidget {
             ],
           ),
           Positioned(
-            top: isHorizontal ? -10 : -10,
-            right: isHorizontal ? -10 : -10,
+            top: isHorizontal ? 8 : 0,
+            right: isHorizontal ? 8 : 0,
             child: IconButton(
-              icon: const Icon(Icons.bookmark),
+              icon: Icon(
+                Icons.bookmark,
+                color: widget.isFavorite
+                    ? Colors.red
+                    : Theme.of(context).iconTheme.color,
+              ),
               iconSize: isHorizontal ? 25 : 35,
-              color: isFavorite
-                  ? const Color.fromARGB(255, 236, 50, 36)
-                  : const Color.fromARGB(255, 87, 87, 87),
-              onPressed: onFavoritePressed,
+              onPressed: () {
+                widget.onFavoritePressed();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      widget.isFavorite
+                          ? 'Livro removido dos favoritos: ${widget.book.title}'
+                          : 'Livro adicionado aos favoritos: ${widget.book.title}',
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
             ),
           ),
         ],
