@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-import 'package:ebook_reader/src/models/book.dart';
+import 'package:ReadUP/src/models/book.dart';
 import 'package:path_provider/path_provider.dart';
 
 class BookService {
