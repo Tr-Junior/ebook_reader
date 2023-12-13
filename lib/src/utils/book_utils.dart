@@ -15,7 +15,8 @@ class BookUtils {
       BuildContext context, Book book) async {
     try {
       final String downloadedBookPath =
-          await BookService().downloadOrOpenBook(book);
+          await BookService(DioBookDownloader(), FileBookStorage())
+              .downloadOrOpenBook(book);
 
       VocsyEpub.setConfig(
         themeColor: Theme.of(context).primaryColor,
