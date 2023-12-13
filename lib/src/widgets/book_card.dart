@@ -1,4 +1,4 @@
-import 'package:ebook_reader/src/models/book.dart';
+import 'package:ReadUP/src/models/book.dart';
 import 'package:flutter/material.dart';
 
 class BookCard extends StatefulWidget {
@@ -29,7 +29,7 @@ class _BookCardState extends State<BookCard> {
 
     return Card(
       elevation: 5,
-      margin: EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
       child: Stack(
         alignment: Alignment.topRight,
         children: [
@@ -75,7 +75,7 @@ class _BookCardState extends State<BookCard> {
                           child: isLoading
                               ? Container(
                                   color: Colors.black.withOpacity(0.5),
-                                  child: Center(
+                                  child: const Center(
                                     child: CircularProgressIndicator(),
                                   ),
                                 )
