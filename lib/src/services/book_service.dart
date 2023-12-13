@@ -1,8 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:ReadUP/src/models/book.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-import 'package:ReadUP/src/models/book.dart';
 import 'package:path_provider/path_provider.dart';
 
 class BookService {
@@ -13,24 +14,31 @@ class BookService {
 
   BookService._internal() {
     _dio.interceptors.add(
-        DioCacheInterceptor(options: CacheOptions(store: MemCacheStore())));
+      DioCacheInterceptor(options: CacheOptions(store: MemCacheStore())),
+    );
   }
 
   Future<List<Book>> getBooks() async {
     try {
       final response = await _dio.get('https://escribo.com/books.json');
-      final List<dynamic> data = response.data;
-      return data.map((json) => Book.fromJson(json)).toList();
+      return (response.data as List)
+          .map((json) => Book.fromJson(json))
+          .toList();
     } catch (error) {
       throw Exception('Erro ao carregar os livros: $error');
     }
   }
 
-  Future<String> downloadBook(Book book) async {
+  Future<String> downloadOrOpenBook(Book book) async {
+    final String filePath = await getLocalBookPath(book);
+
+    if (await isBookDownloaded(filePath)) {
+      return filePath;
+    }
+
     try {
       final List<int> bytes = await _downloadBookBytes(book.downloadUrl);
-      final String filePath = await saveBookToLocal(book, bytes);
-      return filePath;
+      return saveBookToLocal(book, bytes);
     } catch (error) {
       throw Exception('Erro ao baixar o livro: $error');
     }
@@ -49,30 +57,13 @@ class BookService {
     return filePath;
   }
 
-  Future<bool> isBookDownloaded(Book book) async {
-    final String filePath = await getLocalBookPath(book);
+  Future<bool> isBookDownloaded(String filePath) async {
     return File(filePath).existsSync();
   }
 
-  Future<String> downloadOrOpenBook(Book book) async {
-    final bool isDownloaded = await isBookDownloaded(book);
-
-    if (isDownloaded) {
-      return getLocalBookPath(book);
-    } else {
-      try {
-        final List<int> bytes = await _downloadBookBytes(book.downloadUrl);
-        final String filePath = await saveBookToLocal(book, bytes);
-        return filePath;
-      } catch (error) {
-        throw Exception('Erro ao baixar o livro: $error');
-      }
-    }
-  }
-
   Future<String> getLocalBookPath(Book book) async {
-    final String fileName = "${book.title}.epub";
-    final String directory = (await getApplicationDocumentsDirectory()).path;
+    final fileName = "${book.title}.epub";
+    final directory = (await getApplicationDocumentsDirectory()).path;
     return '$directory/$fileName';
   }
 }
