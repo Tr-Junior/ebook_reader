@@ -1,11 +1,11 @@
 import 'dart:convert';
-
-import 'package:ReadUP/src/models/book.dart';
-import 'package:ReadUP/src/services/book_service.dart';
-import 'package:ReadUP/src/widgets/book_card.dart';
+import 'package:ReadUP/src/utils/book_utils.dart';
+import 'package:ReadUP/src/utils/error_handling.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vocsy_epub_viewer/epub_viewer.dart';
+import '../models/book.dart';
+import '../widgets/book_card.dart';
 
 class FavoriteBooksScreen extends StatefulWidget {
   final List<Book> books;
@@ -22,9 +22,9 @@ class FavoriteBooksScreen extends StatefulWidget {
 }
 
 class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
-  late SharedPreferences prefs;
   List<int> favoriteBookIds = [];
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  var logger = Logger();
 
   @override
   void initState() {
@@ -32,9 +32,10 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
     _initSharedPreferences();
   }
 
-  void _initSharedPreferences() {
-    _prefs.then((SharedPreferences prefs) {
-      String value = prefs.getString('books_id') ?? '';
+  void _initSharedPreferences() async {
+    final SharedPreferences prefs = await _prefs;
+    final String value = prefs.getString('books_id') ?? '';
+    setState(() {
       favoriteBookIds = utf8.encode(value);
     });
   }
@@ -66,7 +67,7 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
                 onFavoritePressed: () async {
                   widget.onFavoriteToggled(book);
 
-                  await Future.delayed(const Duration(milliseconds: 300));
+                  await Future.delayed(Duration(milliseconds: 300));
 
                   setState(() {
                     widget.books.remove(book);
@@ -80,9 +81,7 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
                     ),
                   );
                 },
-                onReadPressed: (Book selectedBook) {
-                  _downloadAndOpenBook(context, selectedBook);
-                },
+                onReadPressed: _downloadAndOpenBook,
               );
             },
           )
@@ -91,23 +90,11 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
           );
   }
 
-  Future<void> _downloadAndOpenBook(BuildContext context, Book book) async {
+  void _downloadAndOpenBook(Book book) async {
     try {
-      final String downloadedBookPath =
-          await BookService().downloadOrOpenBook(book);
-
-      VocsyEpub.setConfig(
-        themeColor: Theme.of(context).primaryColor,
-        identifier: "ABook",
-        scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
-        allowSharing: true,
-        enableTts: true,
-        nightMode: true,
-      );
-
-      VocsyEpub.open(downloadedBookPath);
-    } catch (error) {
-      print('Erro ao abrir o livro: $error');
+      await BookUtils.downloadAndOpenBook(context, book);
+    } on AppException catch (e) {
+      logger.e('Erro ao baixar/abrir o livro: $e');
     }
   }
 }
