@@ -23,18 +23,21 @@ class _HomeScreenState extends State<HomeScreen>
   late TabController _tabController;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   var logger = Logger();
+  late BookService _bookService;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    loadBooks();
-    getPrefs();
+    _bookService = BookService();
+    _loadBooks();
+    _initSharedPreferences();
   }
 
-  void getPrefs() {
-    _prefs.then((SharedPreferences prefs) {
-      String value = prefs.getString('books_id') ?? '';
+  void _initSharedPreferences() async {
+    final SharedPreferences prefs = await _prefs;
+    final String value = prefs.getString('books_id') ?? '';
+    setState(() {
       favoriteBookIds = utf8.encode(value);
     });
   }
@@ -93,18 +96,14 @@ class _HomeScreenState extends State<HomeScreen>
           );
   }
 
-  Future<void> loadBooks() async {
+  Future<void> _loadBooks() async {
     try {
-      final List<Book> fetchedBooks = await BookService().getBooks();
+      final List<Book> fetchedBooks = await _bookService.getBooks();
       setState(() {
         books = fetchedBooks;
       });
-    } on NetworkException catch (e) {
-      logger.e('Erro de rede: $e');
-    } on ApiException catch (e) {
-      logger.e('Erro na API: $e');
     } on AppException catch (e) {
-      logger.e('Erro geral: $e');
+      logger.e('Erro ao carregar livros: $e');
     }
   }
 
