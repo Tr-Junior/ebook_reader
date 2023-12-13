@@ -1,13 +1,11 @@
 import 'dart:convert';
-
-import 'package:ebook_reader/src/models/book.dart';
-import 'package:ebook_reader/src/screens/favorite_book_screen.dart';
-import 'package:ebook_reader/src/services/book_service.dart';
-import 'package:ebook_reader/src/widgets/book_card.dart';
+import 'package:ReadUP/src/models/book.dart';
+import 'package:ReadUP/src/screens/favorite_book_screen.dart';
+import 'package:ReadUP/src/services/book_service.dart';
+import 'package:ReadUP/src/utils/book_utils.dart';
+import 'package:ReadUP/src/widgets/book_card.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:vocsy_epub_viewer/epub_viewer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -56,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           _buildBookList(),
           FavoriteBooksScreen(
-            key: Key('FavoriteBooksScreen'),
+            key: const Key('FavoriteBooksScreen'),
             books: books
                 .where((book) => favoriteBookIds.contains(book.id))
                 .toList(),
@@ -104,29 +102,13 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _downloadAndOpenBook(Book book) async {
-    try {
-      final String downloadedBookPath =
-          await BookService().downloadOrOpenBook(book);
-
-      VocsyEpub.setConfig(
-        themeColor: Theme.of(context).primaryColor,
-        identifier: "ABook",
-        scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
-        allowSharing: true,
-        enableTts: true,
-        nightMode: true,
-      );
-
-      VocsyEpub.open(downloadedBookPath);
-    } catch (error) {
-      print('Erro ao abrir o livro  asdasd: $error');
-    }
+    await BookUtils.downloadAndOpenBook(context, book);
   }
 
   void _toggleFavorite(Book book) async {
     final SharedPreferences prefs = await _prefs;
     setState(() {
-      var tempOutput = new List<int>.from(favoriteBookIds);
+      var tempOutput = List<int>.from(favoriteBookIds);
       tempOutput.contains(book.id)
           ? tempOutput.remove(book.id)
           : tempOutput.add(book.id);
