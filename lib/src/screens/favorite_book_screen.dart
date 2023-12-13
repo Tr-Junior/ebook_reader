@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:ebook_reader/src/models/book.dart';
-import 'package:ebook_reader/src/services/book_service.dart';
-import 'package:ebook_reader/src/widgets/book_card.dart';
+import 'package:ReadUP/src/models/book.dart';
+import 'package:ReadUP/src/services/book_service.dart';
+import 'package:ReadUP/src/widgets/book_card.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vocsy_epub_viewer/epub_viewer.dart';
@@ -66,7 +66,7 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
                 onFavoritePressed: () async {
                   widget.onFavoriteToggled(book);
 
-                  await Future.delayed(Duration(milliseconds: 300));
+                  await Future.delayed(const Duration(milliseconds: 300));
 
                   setState(() {
                     widget.books.remove(book);
