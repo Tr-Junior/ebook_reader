@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:ReadUP/src/models/book.dart';
-import 'package:ReadUP/src/screens/favorite_book_screen.dart';
-import 'package:ReadUP/src/services/book_service.dart';
-import 'package:ReadUP/src/utils/book_utils.dart';
-import 'package:ReadUP/src/widgets/book_card.dart';
+import 'package:read_up/src/models/book.dart';
+import 'package:read_up/src/screens/favorite_book_screen.dart';
+import 'package:read_up/src/services/book_service.dart';
+import 'package:read_up/src/utils/book_utils.dart';
+import 'package:read_up/src/utils/error_handling.dart';
+import 'package:read_up/src/widgets/book_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ReadUP/src/utils/error_handling.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -23,13 +23,11 @@ class _HomeScreenState extends State<HomeScreen>
   late TabController _tabController;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   var logger = Logger();
-  late BookService _bookService;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _bookService = BookService();
     _loadBooks();
     _initSharedPreferences();
   }
@@ -46,11 +44,11 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Estante de Livros'),
+        title: const Text('Estante de livros'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Lista de Livros'),
+            Tab(text: 'Lista de livros'),
             Tab(text: 'Favoritos'),
           ],
         ),
@@ -98,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _loadBooks() async {
     try {
-      final List<Book> fetchedBooks = await _bookService.getBooks();
+      final List<Book> fetchedBooks = await BookService().getBooks();
       setState(() {
         books = fetchedBooks;
       });
@@ -116,18 +114,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _toggleFavorite(Book book) async {
-    try {
-      final SharedPreferences prefs = await _prefs;
-      setState(() {
-        var tempOutput = List<int>.from(favoriteBookIds);
-        tempOutput.contains(book.id)
-            ? tempOutput.remove(book.id)
-            : tempOutput.add(book.id);
-        favoriteBookIds = tempOutput;
-        prefs.setString('books_id', utf8.decode(tempOutput));
-      });
-    } on AppException catch (e) {
-      logger.e('Erro ao alterar favorito: $e');
-    }
+    await FavoriteBookManager.toggleFavorite(
+      book: book,
+      favoriteBookIds: favoriteBookIds,
+      prefs: await _prefs,
+      onFavoritesUpdated: (updatedFavorites) {
+        setState(() {
+          favoriteBookIds = updatedFavorites;
+        });
+      },
+    );
   }
 }

@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:ReadUP/src/utils/book_utils.dart';
-import 'package:ReadUP/src/utils/error_handling.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:read_up/src/utils/book_utils.dart';
+import 'package:read_up/src/utils/error_handling.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/book.dart';
 import '../widgets/book_card.dart';
@@ -65,20 +65,24 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
                 book: book,
                 isFavorite: true,
                 onFavoritePressed: () async {
-                  widget.onFavoriteToggled(book);
+                  await FavoriteBookManager.toggleFavorite(
+                    book: book,
+                    favoriteBookIds: favoriteBookIds,
+                    prefs: await _prefs,
+                    onFavoritesUpdated: (updatedFavorites) {
+                      setState(() {
+                        favoriteBookIds = updatedFavorites;
+                        widget.books.remove(book);
+                      });
 
-                  await Future.delayed(Duration(milliseconds: 300));
-
-                  setState(() {
-                    widget.books.remove(book);
-                  });
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content:
-                          Text('Livro removido dos favoritos: ${book.title}'),
-                      duration: const Duration(seconds: 2),
-                    ),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Livro removido dos favoritos: ${book.title}'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
                   );
                 },
                 onReadPressed: _downloadAndOpenBook,
@@ -86,7 +90,7 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
             },
           )
         : const Center(
-            child: Text('Nenhum livro favorito.'),
+            child: Text('Seus livros favoritos aparecem aqui.'),
           );
   }
 
