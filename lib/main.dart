@@ -1,5 +1,5 @@
-import 'package:ReadUP/src/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:read_up/src/screens/home_screen.dart';
 
 void main() async {
   runApp(const MyApp());

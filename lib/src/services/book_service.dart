@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
-
-import 'package:ReadUP/src/models/book.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:read_up/src/models/book.dart';
 
 class BookService {
   final Dio _dio = Dio();

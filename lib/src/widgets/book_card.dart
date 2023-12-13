@@ -1,5 +1,5 @@
-import 'package:ReadUP/src/models/book.dart';
 import 'package:flutter/material.dart';
+import 'package:read_up/src/models/book.dart';
 
 class BookCard extends StatefulWidget {
   final Book book;
