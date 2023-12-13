@@ -1,11 +1,13 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:ReadUP/src/models/book.dart';
 import 'package:ReadUP/src/screens/favorite_book_screen.dart';
 import 'package:ReadUP/src/services/book_service.dart';
 import 'package:ReadUP/src/utils/book_utils.dart';
 import 'package:ReadUP/src/widgets/book_card.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ReadUP/src/utils/error_handling.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -20,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen>
   List<int> favoriteBookIds = [];
   late TabController _tabController;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  var logger = Logger();
 
   @override
   void initState() {
@@ -96,24 +99,36 @@ class _HomeScreenState extends State<HomeScreen>
       setState(() {
         books = fetchedBooks;
       });
-    } catch (error) {
-      print('Erro ao carregar livros: $error');
+    } on NetworkException catch (e) {
+      logger.e('Erro de rede: $e');
+    } on ApiException catch (e) {
+      logger.e('Erro na API: $e');
+    } on AppException catch (e) {
+      logger.e('Erro geral: $e');
     }
   }
 
-  Future<void> _downloadAndOpenBook(Book book) async {
-    await BookUtils.downloadAndOpenBook(context, book);
+  void _downloadAndOpenBook(Book book) async {
+    try {
+      await BookUtils.downloadAndOpenBook(context, book);
+    } on AppException catch (e) {
+      logger.e('Erro ao baixar/abrir o livro: $e');
+    }
   }
 
   void _toggleFavorite(Book book) async {
-    final SharedPreferences prefs = await _prefs;
-    setState(() {
-      var tempOutput = List<int>.from(favoriteBookIds);
-      tempOutput.contains(book.id)
-          ? tempOutput.remove(book.id)
-          : tempOutput.add(book.id);
-      favoriteBookIds = tempOutput;
-      prefs.setString('books_id', utf8.decode(tempOutput));
-    });
+    try {
+      final SharedPreferences prefs = await _prefs;
+      setState(() {
+        var tempOutput = List<int>.from(favoriteBookIds);
+        tempOutput.contains(book.id)
+            ? tempOutput.remove(book.id)
+            : tempOutput.add(book.id);
+        favoriteBookIds = tempOutput;
+        prefs.setString('books_id', utf8.decode(tempOutput));
+      });
+    } on AppException catch (e) {
+      logger.e('Erro ao alterar favorito: $e');
+    }
   }
 }
