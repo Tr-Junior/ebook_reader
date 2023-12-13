@@ -4,12 +4,10 @@ import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:read_up/src/models/book.dart';
 
-// Interface para serviços de download e salvamento de livros
 abstract class BookDownloader {
   Future<String> downloadBook(Book book);
 }
 
-// Implementação da interface BookDownloader usando Dio
 class DioBookDownloader implements BookDownloader {
   final Dio _dio = Dio();
 
@@ -31,13 +29,11 @@ class DioBookDownloader implements BookDownloader {
   }
 }
 
-// Interface para serviços relacionados ao armazenamento de livros
 abstract class BookStorage {
   Future<bool> isBookDownloaded(String filePath);
   Future<String> getLocalBookPath(Book book);
 }
 
-// Implementação da interface BookStorage usando File e path_provider
 class FileBookStorage implements BookStorage {
   @override
   Future<bool> isBookDownloaded(String filePath) async {
@@ -52,7 +48,6 @@ class FileBookStorage implements BookStorage {
   }
 }
 
-// Classe que coordena as operações relacionadas a livros
 class BookService {
   final BookDownloader _bookDownloader;
   final BookStorage _bookStorage;
@@ -74,7 +69,13 @@ class BookService {
 
   Future<void> _setupInterceptor() async {
     Dio().interceptors.add(
-          DioCacheInterceptor(options: CacheOptions(store: MemCacheStore())),
+          DioCacheInterceptor(
+            options: CacheOptions(
+              store: MemCacheStore(),
+              policy: CachePolicy.request,
+              hitCacheOnErrorExcept: [500],
+            ),
+          ),
         );
   }
 
@@ -86,7 +87,7 @@ class BookService {
     }
 
     try {
-      return _bookDownloader.downloadBook(book);
+      return await _bookDownloader.downloadBook(book);
     } catch (error) {
       throw Exception('Erro ao baixar o livro: $error');
     }
