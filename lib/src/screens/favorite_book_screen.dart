@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:read_up/src/screens/book_list_screen.dart';
 import 'package:read_up/src/utils/book_utils.dart';
 import 'package:read_up/src/utils/error_handling.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,55 +44,14 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _buildBookList(),
+      body: BookListScreen(
+        books: widget.books,
+        favoriteBookIds: favoriteBookIds,
+        toggleFavorite: widget.onFavoriteToggled,
+        downloadAndOpenBook: _downloadAndOpenBook,
+        isFavoriteScreen: true,
+      ),
     );
-  }
-
-  Widget _buildBookList() {
-    final List<Book> favoriteBooksCopy = List.from(widget.books);
-
-    return favoriteBooksCopy.isNotEmpty
-        ? GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 240,
-              crossAxisSpacing: 6.0,
-              mainAxisSpacing: 6.0,
-              childAspectRatio: 0.7,
-            ),
-            itemCount: favoriteBooksCopy.length,
-            itemBuilder: (context, index) {
-              final book = favoriteBooksCopy[index];
-              return BookCard(
-                book: book,
-                isFavorite: true,
-                onFavoritePressed: () async {
-                  await FavoriteBookManager.toggleFavorite(
-                    book: book,
-                    favoriteBookIds: favoriteBookIds,
-                    prefs: await _prefs,
-                    onFavoritesUpdated: (updatedFavorites) {
-                      setState(() {
-                        favoriteBookIds = updatedFavorites;
-                        widget.books.remove(book);
-                      });
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Livro removido dos favoritos: ${book.title}'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  );
-                },
-                onReadPressed: _downloadAndOpenBook,
-              );
-            },
-          )
-        : const Center(
-            child: Text('Seus livros favoritos aparecem aqui.'),
-          );
   }
 
   void _downloadAndOpenBook(Book book) async {

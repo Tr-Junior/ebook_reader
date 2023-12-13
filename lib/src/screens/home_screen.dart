@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:read_up/src/models/book.dart';
+import 'package:read_up/src/screens/book_list_screen.dart';
 import 'package:read_up/src/screens/favorite_book_screen.dart';
 import 'package:read_up/src/services/book_service.dart';
 import 'package:read_up/src/utils/book_utils.dart';
@@ -23,11 +24,13 @@ class _HomeScreenState extends State<HomeScreen>
   late TabController _tabController;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   var logger = Logger();
+  late BookService _bookService;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _bookService = BookService();
     _loadBooks();
     _initSharedPreferences();
   }
@@ -56,7 +59,13 @@ class _HomeScreenState extends State<HomeScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildBookList(),
+          BookListScreen(
+            books: books,
+            favoriteBookIds: favoriteBookIds,
+            toggleFavorite: _toggleFavorite,
+            downloadAndOpenBook: _downloadAndOpenBook,
+            isFavoriteScreen: false,
+          ),
           FavoriteBooksScreen(
             key: const Key('FavoriteBooksScreen'),
             books: books
@@ -69,34 +78,9 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildBookList() {
-    return books.isNotEmpty
-        ? GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 240,
-              crossAxisSpacing: 6.0,
-              mainAxisSpacing: 6.0,
-              childAspectRatio: 0.7,
-            ),
-            itemCount: books.length,
-            itemBuilder: (context, index) {
-              final book = books[index];
-              return BookCard(
-                book: book,
-                isFavorite: favoriteBookIds.contains(book.id),
-                onFavoritePressed: () => _toggleFavorite(book),
-                onReadPressed: _downloadAndOpenBook,
-              );
-            },
-          )
-        : const Center(
-            child: Text('Nenhum livro disponível.'),
-          );
-  }
-
   Future<void> _loadBooks() async {
     try {
-      final List<Book> fetchedBooks = await BookService().getBooks();
+      final List<Book> fetchedBooks = await _bookService.getBooks();
       setState(() {
         books = fetchedBooks;
       });
