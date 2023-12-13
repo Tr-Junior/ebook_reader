@@ -27,9 +27,12 @@ class _BookCardState extends State<BookCard> {
     bool isHorizontal =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
+    ThemeData theme = Theme.of(context);
+    Color textColor = theme.textTheme.bodyText1?.color ?? Colors.black;
+
     return Card(
       elevation: 5,
-      margin: const EdgeInsets.all(8),
+      margin: const EdgeInsets.all(4),
       child: Stack(
         alignment: Alignment.topRight,
         children: [
@@ -37,7 +40,6 @@ class _BookCardState extends State<BookCard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                // Adicione o Expanded aqui
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(6),
@@ -101,7 +103,7 @@ class _BookCardState extends State<BookCard> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(4.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -110,7 +112,7 @@ class _BookCardState extends State<BookCard> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: isHorizontal ? 12 : 12,
-                        color: Colors.black,
+                        color: textColor, // Troquei para a cor do texto do tema
                       ),
                     ),
                     Text(
@@ -120,7 +122,7 @@ class _BookCardState extends State<BookCard> {
                       style: TextStyle(
                         fontSize: isHorizontal ? 10 : 12,
                         fontStyle: FontStyle.italic,
-                        color: Colors.black,
+                        color: textColor, // Troquei para a cor do texto do tema
                       ),
                     ),
                   ],
@@ -136,7 +138,8 @@ class _BookCardState extends State<BookCard> {
                 Icons.bookmark,
                 color: widget.isFavorite
                     ? Colors.red
-                    : Theme.of(context).iconTheme.color,
+                    : theme
+                        .iconTheme.color, // Troquei para a cor do ícone do tema
               ),
               iconSize: isHorizontal ? 45 : 35,
               onPressed: () {

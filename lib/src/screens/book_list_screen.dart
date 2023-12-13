@@ -39,10 +39,26 @@ class BookListScreen extends StatelessWidget {
             },
           )
         : Center(
-            child: Text(
-              isFavoriteScreen
-                  ? 'Seus livros favoritos aparecem aqui.'
-                  : 'Nenhum livro disponível.',
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isFavoriteScreen ? Icons.favorite : Icons.library_books,
+                  size: 60,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  isFavoriteScreen
+                      ? 'Seus livros favoritos aparecem aqui.'
+                      : 'Nenhum livro disponível.',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           );
   }

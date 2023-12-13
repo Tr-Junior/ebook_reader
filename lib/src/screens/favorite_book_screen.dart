@@ -43,15 +43,22 @@ class _FavoriteBooksScreenState extends State<FavoriteBooksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BookListScreen(
-        books: widget.books,
-        favoriteBookIds: favoriteBookIds,
-        toggleFavorite: widget.onFavoriteToggled,
-        downloadAndOpenBook: _downloadAndOpenBook,
-        isFavoriteScreen: true,
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      child: Scaffold(
+        body: BookListScreen(
+          books: widget.books,
+          favoriteBookIds: favoriteBookIds,
+          toggleFavorite: widget.onFavoriteToggled,
+          downloadAndOpenBook: _downloadAndOpenBook,
+          isFavoriteScreen: true,
+        ),
       ),
     );
+  }
+
+  Future<void> _handleRefresh() async {
+    _initSharedPreferences();
   }
 
   void _downloadAndOpenBook(Book book) async {
