@@ -26,6 +26,8 @@ class _HomeScreenState extends State<HomeScreen>
   var logger = Logger();
   late BookService _bookService;
 
+  bool _isDarkTheme = false;
+
   @override
   void initState() {
     super.initState();
@@ -40,42 +42,60 @@ class _HomeScreenState extends State<HomeScreen>
     final String value = prefs.getString('books_id') ?? '';
     setState(() {
       favoriteBookIds = utf8.encode(value);
+      _isDarkTheme = prefs.getBool('darkTheme') ?? false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Estante de livros'),
-        bottom: TabBar(
+    return MaterialApp(
+      theme: _isDarkTheme ? ThemeData.dark() : ThemeData.light(),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Estante de Livros'),
+          actions: [
+            IconButton(
+              icon:
+                  Icon(_isDarkTheme ? Icons.wb_sunny : Icons.nightlight_round),
+              onPressed: _toggleTheme,
+            ),
+          ],
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(icon: Icon(Icons.library_books), text: 'Lista de Livros'),
+              Tab(icon: Icon(Icons.favorite), text: 'Favoritos'),
+            ],
+          ),
+        ),
+        body: TabBarView(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Lista de livros'),
-            Tab(text: 'Favoritos'),
+          children: [
+            RefreshIndicator(
+              onRefresh: _handleRefresh,
+              child: BookListScreen(
+                books: books,
+                favoriteBookIds: favoriteBookIds,
+                toggleFavorite: _toggleFavorite,
+                downloadAndOpenBook: _downloadAndOpenBook,
+                isFavoriteScreen: false,
+              ),
+            ),
+            FavoriteBooksScreen(
+              key: const Key('FavoriteBooksScreen'),
+              books: books
+                  .where((book) => favoriteBookIds.contains(book.id))
+                  .toList(),
+              onFavoriteToggled: _toggleFavorite,
+            ),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          BookListScreen(
-            books: books,
-            favoriteBookIds: favoriteBookIds,
-            toggleFavorite: _toggleFavorite,
-            downloadAndOpenBook: _downloadAndOpenBook,
-            isFavoriteScreen: false,
-          ),
-          FavoriteBooksScreen(
-            key: const Key('FavoriteBooksScreen'),
-            books: books
-                .where((book) => favoriteBookIds.contains(book.id))
-                .toList(),
-            onFavoriteToggled: _toggleFavorite,
-          ),
-        ],
-      ),
     );
+  }
+
+  Future<void> _handleRefresh() async {
+    await _loadBooks();
   }
 
   Future<void> _loadBooks() async {
@@ -108,5 +128,13 @@ class _HomeScreenState extends State<HomeScreen>
         });
       },
     );
+  }
+
+  void _toggleTheme() async {
+    final SharedPreferences prefs = await _prefs;
+    setState(() {
+      _isDarkTheme = !_isDarkTheme;
+      prefs.setBool('darkTheme', _isDarkTheme);
+    });
   }
 }
