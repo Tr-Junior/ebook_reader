@@ -1,4 +1,4 @@
-package com.example.ebook_reader
+package com.example.ReadUP
 
 import io.flutter.embedding.android.FlutterActivity
 

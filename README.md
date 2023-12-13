@@ -1,3 +1,3 @@
-# ebook_reader
+# ReadUP
 
 A new Flutter project.
