@@ -40,8 +40,8 @@ class _BookCardState extends State<BookCard> {
                 // Adicione o Expanded aqui
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    topRight: Radius.circular(8),
+                    topLeft: Radius.circular(6),
+                    topRight: Radius.circular(6),
                   ),
                   child: GestureDetector(
                     onTap: () async {
@@ -65,7 +65,7 @@ class _BookCardState extends State<BookCard> {
                     child: Stack(
                       children: [
                         Container(
-                          height: isHorizontal ? 180 : 200,
+                          height: isHorizontal ? 235 : 200,
                           decoration: BoxDecoration(
                             image: DecorationImage(
                               image: NetworkImage(widget.book.coverUrl),
@@ -83,7 +83,7 @@ class _BookCardState extends State<BookCard> {
                         ),
                         if (!isLoading)
                           Container(
-                            height: isHorizontal ? 180 : 200,
+                            height: isHorizontal ? 235 : 200,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
@@ -129,8 +129,8 @@ class _BookCardState extends State<BookCard> {
             ],
           ),
           Positioned(
-            top: isHorizontal ? 8 : 0,
-            right: isHorizontal ? 8 : 0,
+            top: isHorizontal ? -12 : -11,
+            right: isHorizontal ? -16 : -14,
             child: IconButton(
               icon: Icon(
                 Icons.bookmark,
@@ -138,7 +138,7 @@ class _BookCardState extends State<BookCard> {
                     ? Colors.red
                     : Theme.of(context).iconTheme.color,
               ),
-              iconSize: isHorizontal ? 25 : 35,
+              iconSize: isHorizontal ? 45 : 35,
               onPressed: () {
                 widget.onFavoritePressed();
 
