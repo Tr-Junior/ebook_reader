@@ -1,6 +1,7 @@
 # Read Up
 
 O ReadUP é um aplicativo simples para leitura de livros em formato EPUB. Ele permite que os usuários visualizem uma lista de livros disponíveis, adicionem livros aos favoritos e os leiam no aplicativo.
+Link para Download do APP: https://drive.google.com/file/d/1nVQDUeVlfWV9Mfjxd5sLtWCGl_VSzY3X/view?usp=sharing
 
 ## Funcionalidades
 
