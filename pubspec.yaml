@@ -14,6 +14,7 @@ dependencies:
   logger: ^2.0.2+1
   path: ^1.8.3
   path_provider: ^2.1.1
+  permission_handler: ^11.1.0
   shared_preferences: ^2.2.2
   vocsy_epub_viewer: ^2.0.0
 
